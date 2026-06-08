@@ -168,7 +168,103 @@ async function main(): Promise<void> {
 
   status.textContent = "Running: same scene rendered by both engines";
 
-  // ── 7. Synchronized render loop ────────────────────────────────
+  // ── 7. Buttons ─────────────────────────────────────────────────
+
+  const btnRow = document.createElement("div");
+  btnRow.id = "btn-row";
+  appEl.appendChild(btnRow);
+
+  const btnAdd = document.createElement("button");
+  btnAdd.id = "btn-add-shape";
+  btnAdd.textContent = "Add random shape";
+  btnRow.appendChild(btnAdd);
+
+  const btnPdf = document.createElement("button");
+  btnPdf.id = "btn-export-pdf";
+  btnPdf.textContent = "Export to PDF";
+  btnPdf.disabled = true;
+  btnRow.appendChild(btnPdf);
+
+  // ── Random shape generator ─────────────────────────────────────
+
+  function rand(min: number, max: number): number {
+    return Math.random() * (max - min) + min;
+  }
+
+  function randInt(min: number, max: number): number {
+    return Math.floor(rand(min, max));
+  }
+
+  function randColor(): number {
+    return (
+      (randInt(40, 255) << 16) | (randInt(40, 255) << 8) | randInt(40, 255)
+    );
+  }
+
+  function addRandomShape(): void {
+    const kind = randInt(0, 4); // 0=rect, 1=circle, 2=polyline, 3=polygon
+    const g = new PIXI.Graphics();
+
+    const color = randColor();
+    const alpha = rand(0.4, 1.0);
+    const x = rand(40, WIDTH - 40);
+    const y = rand(40, HEIGHT - 40);
+
+    switch (kind) {
+      case 0: {
+        // Filled rectangle
+        const w = rand(30, 140);
+        const h = rand(30, 100);
+        g.beginFill(color, alpha);
+        g.drawRect(-w / 2, -h / 2, w, h);
+        g.endFill();
+        g.position.set(x, y);
+        g.rotation = rand(0, Math.PI * 2);
+        break;
+      }
+      case 1: {
+        // Filled circle
+        const r = rand(15, 60);
+        g.beginFill(color, alpha);
+        g.drawCircle(0, 0, r);
+        g.endFill();
+        g.position.set(x, y);
+        break;
+      }
+      case 2: {
+        // Stroke-only polyline (2–5 segments)
+        const segs = randInt(2, 6);
+        g.lineStyle(rand(1, 5), color, alpha);
+        g.moveTo(rand(20, WIDTH - 20), rand(20, HEIGHT - 20));
+        for (let i = 0; i < segs; i++) {
+          g.lineTo(rand(20, WIDTH - 20), rand(20, HEIGHT - 20));
+        }
+        break;
+      }
+      case 3: {
+        // Filled polygon (triangle / quad / pentagon)
+        const sides = randInt(3, 6);
+        const radius = rand(25, 70);
+        g.beginFill(color, alpha);
+        g.moveTo(radius, 0);
+        for (let i = 1; i < sides; i++) {
+          const angle = (i / sides) * Math.PI * 2;
+          g.lineTo(Math.cos(angle) * radius, Math.sin(angle) * radius);
+        }
+        g.closePath();
+        g.endFill();
+        g.position.set(x, y);
+        g.rotation = rand(0, Math.PI * 2);
+        break;
+      }
+    }
+
+    stage.addChild(g);
+  }
+
+  btnAdd.addEventListener("click", addRandomShape);
+
+  // ── 8. Synchronized render loop ────────────────────────────────
 
   let frameCount = 0;
 

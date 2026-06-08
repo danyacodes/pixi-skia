@@ -66,6 +66,39 @@
         border-radius: 8px;
         box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
       }
+
+      /* ── Buttons ── */
+      #btn-row {
+        display: flex;
+        gap: 16px;
+        justify-content: center;
+      }
+
+      #btn-row button {
+        padding: 10px 24px;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.06);
+        color: #e0e0e0;
+        font-family: inherit;
+        font-size: 14px;
+        cursor: pointer;
+        transition: background 0.15s, border-color 0.15s;
+      }
+
+      #btn-row button:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.12);
+        border-color: rgba(255, 255, 255, 0.3);
+      }
+
+      #btn-row button:active:not(:disabled) {
+        background: rgba(255, 255, 255, 0.18);
+      }
+
+      #btn-row button:disabled {
+        opacity: 0.35;
+        cursor: not-allowed;
+      }
     </style>
   </head>
   <body>
