@@ -11,5 +11,9 @@
   "devDependencies": {
     "typescript": "~6.0.2",
     "vite": "^8.0.12"
+  },
+  "dependencies": {
+    "canvaskit-wasm": "^0.41.1",
+    "pixi.js-legacy": "^7.2.4"
   }
 }

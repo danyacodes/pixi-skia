@@ -2,9 +2,71 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>pixi-skia</title>
+    <title>Pixi → Skia CanvasKit — Side-by-Side</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        background: #0a0a12;
+        color: #e0e0e0;
+        font-family: "Inter", system-ui, -apple-system, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      #app {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+      }
+
+      #status {
+        font-size: 14px;
+        opacity: 0.7;
+        letter-spacing: 0.02em;
+      }
+
+      /* ── Side-by-side layout ── */
+      #canvas-row {
+        display: flex;
+        gap: 32px;
+        align-items: flex-start;
+      }
+
+      .canvas-panel {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .canvas-label {
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        opacity: 0.5;
+      }
+
+      #pixi-canvas,
+      #skia-canvas {
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 8px;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+      }
+    </style>
   </head>
   <body>
     <div id="app"></div>
