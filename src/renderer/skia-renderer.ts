@@ -31,13 +31,24 @@ export class SkiaRenderer {
     this.ck = ck;
     this.textureCache = textureCache;
 
-    // Try WebGL first, then SW fallback
+    // Try every known surface factory name across Skia versions.
+    // Use optional chaining — custom builds may omit some methods.
+    const ckAny = ck as unknown as Record<string, Function | undefined>;
     const surface =
-      ck.MakeWebGLCanvasSurface(canvasElement) ??
-      ck.MakeSWCanvasSurface(canvasElement);
+      ckAny.MakeWebGLCanvasSurface?.(canvasElement) ??   // classic npm build
+      ckAny.MakeGPUCanvasSurface?.(canvasElement) ??     // newer Skia builds
+      ckAny.MakeCanvasSurface?.(canvasElement) ??        // some custom builds
+      ckAny.MakeSWCanvasSurface?.(canvasElement) ??      // CPU-only fallback
+      null;
 
     if (!surface) {
-      throw new Error("CanvasKit: failed to create surface");
+      throw new Error(
+        "CanvasKit: failed to create surface. " +
+        "Available factories: " +
+        ["MakeWebGLCanvasSurface", "MakeGPUCanvasSurface", "MakeCanvasSurface", "MakeSWCanvasSurface"]
+          .filter(n => typeof ckAny[n] === "function")
+          .join(", ") || "(none found)",
+      );
     }
 
     this.surface = surface;

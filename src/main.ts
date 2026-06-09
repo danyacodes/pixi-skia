@@ -8,10 +8,12 @@
  * Both render the exact same scene graph.
  */
 import * as PIXI from "pixi.js-legacy";
-import CanvasKitInit from "canvaskit-wasm";
+import { initCanvasKit } from "./canvaskit-loader.ts";
 import { PixiToIRAdapter } from "./adapter/pixi-adapter.ts";
 import { TextureCache } from "./renderer/texture-cache.ts";
 import { SkiaRenderer } from "./renderer/skia-renderer.ts";
+import { PDFExporter } from "./renderer/pdf-exporter.ts";
+import { hasPDFSupport, dumpPDFCandidates } from "./canvaskit-pdf.ts";
 
 // Vite resolves this to a URL string at build time
 import treePng from "./assets/tree.png";
@@ -34,9 +36,7 @@ async function main(): Promise<void> {
 
   // ── 1. CanvasKit ─────────────────────────────────────────────────
 
-  const CanvasKit = await CanvasKitInit({
-    locateFile: () => "/canvaskit.wasm",
-  });
+  const CanvasKit = await initCanvasKit();
   status.textContent = "CanvasKit ready. Building scene…";
 
   // ── 2. Side-by-side canvas layout ───────────────────────────────
@@ -182,7 +182,6 @@ async function main(): Promise<void> {
   const btnPdf = document.createElement("button");
   btnPdf.id = "btn-export-pdf";
   btnPdf.textContent = "Export to PDF";
-  btnPdf.disabled = true;
   btnRow.appendChild(btnPdf);
 
   // ── Random shape generator ─────────────────────────────────────
@@ -263,6 +262,44 @@ async function main(): Promise<void> {
   }
 
   btnAdd.addEventListener("click", addRandomShape);
+
+  // ── PDF export ─────────────────────────────────────────────────
+
+  const pdfExporter = new PDFExporter(CanvasKit, textureCache);
+
+  btnPdf.addEventListener("click", () => {
+    if (!hasPDFSupport(CanvasKit)) {
+      dumpPDFCandidates(CanvasKit);
+      alert(
+        "PDF factory function not found in this CanvasKit build.\n\n" +
+        "Check the browser console for diagnostics (list of available Make* functions).\n\n" +
+        "The build must include skia_enable_pdf=true.",
+      );
+      return;
+    }
+
+    try {
+      // Snapshot the current scene
+      const ir = adapter.convert(stage);
+      const pdfBytes = pdfExporter.export(ir, WIDTH, HEIGHT, "Pixi-Skia Scene Export");
+
+      // Trigger browser download
+      const blob = new Blob([new Uint8Array(pdfBytes)], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "scene-export.pdf";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      console.log(`[PDF] Exported ${pdfBytes.byteLength} bytes`);
+    } catch (err) {
+      console.error("[PDF] Export failed:", err);
+      alert(`PDF export error: ${(err as Error).message}`);
+    }
+  });
 
   // ── 8. Synchronized render loop ────────────────────────────────
 
