@@ -14,6 +14,8 @@ import { TextureCache } from "./renderer/texture-cache.ts";
 import { SkiaRenderer } from "./renderer/skia-renderer.ts";
 import { PDFExporter } from "./renderer/pdf-exporter.ts";
 import { hasPDFSupport, dumpPDFCandidates } from "./canvaskit-pdf.ts";
+import { EventBridge, BRIDGE_EVENTS } from "./events/event-bridge.ts";
+import type { BridgePointerEvent } from "./events/event-bridge.ts";
 
 // Vite resolves this to a URL string at build time
 import treePng from "./assets/tree.png";
@@ -74,6 +76,12 @@ async function main(): Promise<void> {
   });
   const pixiView = pixiApp.view as HTMLCanvasElement;
   pixiView.id = "pixi-canvas";
+
+  // Disable Pixi's native EventSystem — we use EventBridge for unified
+  // hit-testing across both canvases.
+  if (pixiApp.renderer.events) {
+    pixiApp.renderer.events.destroy();
+  }
   pixiPanel.appendChild(pixiView);
 
   // ── 4. Create Skia canvas ───────────────────────────────────────
@@ -145,6 +153,20 @@ async function main(): Promise<void> {
   treeSprite.scale.set(1.2, 1.2);
   stage.addChild(treeSprite);
 
+  // ── 5h. Make objects interactive ─────────────────────────────────
+
+  redSquare.eventMode = "static";
+  redSquare.cursor = "pointer";
+
+  blueRect.eventMode = "static";
+  blueRect.cursor = "pointer";
+
+  circle.eventMode = "static";
+  circle.cursor = "pointer";
+
+  treeSprite.eventMode = "static";
+  treeSprite.cursor = "pointer";
+
   // ── 6. Rendering pipeline (Skia side) ──────────────────────────
 
   const adapter = new PixiToIRAdapter();
@@ -166,7 +188,31 @@ async function main(): Promise<void> {
     }
   });
 
+  // ── 6b. Event bridge (pointerDown / pointerUp on both canvases) ─
+
+  const bridge = new EventBridge(pixiView, skiaCanvas, stage);
+
+  // Demo handlers — visual feedback + console log
+  function onDown(e: BridgePointerEvent): void {
+    const obj = e.target;
+    console.log(`[pointerdown] ${obj.constructor.name} via ${e.source} at (${e.global.x|0}, ${e.global.y|0})`);
+    obj.scale.set(obj.scale.x * 1.15, obj.scale.y * 1.15);
+  }
+
+  function onUp(e: BridgePointerEvent): void {
+    const obj = e.target;
+    console.log(`[pointerup]   ${obj.constructor.name} via ${e.source}`);
+    obj.scale.set(obj.scale.x / 1.15, obj.scale.y / 1.15);
+  }
+
+  for (const obj of [redSquare, blueRect, circle, treeSprite] as PIXI.DisplayObject[]) {
+    const ee = obj as unknown as PIXI.utils.EventEmitter;
+    ee.on(BRIDGE_EVENTS.POINTER_DOWN, onDown);
+    ee.on(BRIDGE_EVENTS.POINTER_UP, onUp);
+  }
+
   status.textContent = "Running: same scene rendered by both engines";
+  void bridge; // keep reference
 
   // ── 7. Buttons ─────────────────────────────────────────────────
 
