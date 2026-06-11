@@ -45,8 +45,12 @@ export class EventBridge {
 
     skiaCanvas.addEventListener("pointerdown", this.onSkiaPointerDown);
     skiaCanvas.addEventListener("pointerup", this.onSkiaPointerUp);
+    skiaCanvas.addEventListener("pointermove", this.onSkiaPointerMove);
+    skiaCanvas.addEventListener("pointerleave", this.onSkiaPointerLeave);
     pixiCanvas.addEventListener("pointerdown", this.onPixiPointerDown);
     pixiCanvas.addEventListener("pointerup", this.onPixiPointerUp);
+    pixiCanvas.addEventListener("pointermove", this.onPixiPointerMove);
+    pixiCanvas.addEventListener("pointerleave", this.onPixiPointerLeave);
   }
 
   // ── DOM → Bridge dispatch ─────────────────────────────────────────
@@ -81,6 +85,52 @@ export class EventBridge {
   private onPixiPointerUp = (e: PointerEvent): void => {
     this.dispatch(this.pixiCanvas, e, BRIDGE_EVENTS.POINTER_UP, "pixi");
   };
+
+  // ── Cursor management ─────────────────────────────────────────────
+
+  /** Last known pointer position per canvas (null = pointer outside). */
+  private lastSkiaPos: PIXI.Point | null = null;
+  private lastPixiPos: PIXI.Point | null = null;
+
+  private onSkiaPointerMove = (e: PointerEvent): void => {
+    this.lastSkiaPos = this.canvasPoint(this.skiaCanvas, e);
+    this.applyCursor(this.skiaCanvas, this.lastSkiaPos);
+  };
+  private onSkiaPointerLeave = (): void => {
+    this.lastSkiaPos = null;
+    this.skiaCanvas.style.cursor = "default";
+  };
+  private onPixiPointerMove = (e: PointerEvent): void => {
+    this.lastPixiPos = this.canvasPoint(this.pixiCanvas, e);
+    this.applyCursor(this.pixiCanvas, this.lastPixiPos);
+  };
+  private onPixiPointerLeave = (): void => {
+    this.lastPixiPos = null;
+    this.pixiCanvas.style.cursor = "default";
+  };
+
+  /**
+   * Call once per frame (from the render loop) to keep cursors in sync
+   * when objects move under or away from the pointer.
+   */
+  tick(): void {
+    if (this.lastSkiaPos) {
+      this.applyCursor(this.skiaCanvas, this.lastSkiaPos);
+    }
+    if (this.lastPixiPos) {
+      this.applyCursor(this.pixiCanvas, this.lastPixiPos);
+    }
+  }
+
+  private applyCursor(canvas: HTMLCanvasElement, pos: PIXI.Point): void {
+    const target = this.hitTest(pos);
+    if (target) {
+      const cursor = (target as unknown as Record<string, unknown>).cursor;
+      canvas.style.cursor = typeof cursor === "string" ? cursor : "pointer";
+    } else {
+      canvas.style.cursor = "default";
+    }
+  }
 
   // ── Hit-testing ───────────────────────────────────────────────────
 
@@ -133,9 +183,11 @@ export class EventBridge {
   }
 
   destroy(): void {
-    this.skiaCanvas.removeEventListener("pointerdown", this.onSkiaPointerDown);
-    this.skiaCanvas.removeEventListener("pointerup", this.onSkiaPointerUp);
-    this.pixiCanvas.removeEventListener("pointerdown", this.onPixiPointerDown);
-    this.pixiCanvas.removeEventListener("pointerup", this.onPixiPointerUp);
+    for (const canvas of [this.skiaCanvas, this.pixiCanvas]) {
+      canvas.removeEventListener("pointerdown", this.onSkiaPointerDown);
+      canvas.removeEventListener("pointerup", this.onSkiaPointerUp);
+      canvas.removeEventListener("pointermove", this.onSkiaPointerMove);
+      canvas.removeEventListener("pointerleave", this.onSkiaPointerLeave);
+    }
   }
 }

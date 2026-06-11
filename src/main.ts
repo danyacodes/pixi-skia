@@ -212,7 +212,6 @@ async function main(): Promise<void> {
   }
 
   status.textContent = "Running: same scene rendered by both engines";
-  void bridge; // keep reference
 
   // ── 7. Buttons ─────────────────────────────────────────────────
 
@@ -369,6 +368,9 @@ async function main(): Promise<void> {
     // ── Right: Pixi → IR → Skia ─────────────────────────────────
     const ir = adapter.convert(stage);
     skiaRenderer.render(ir);
+
+    // ── Update cursors for moving objects ─────────────────────────
+    bridge.tick();
 
     requestAnimationFrame(frame);
   }
