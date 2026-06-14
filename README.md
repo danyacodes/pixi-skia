@@ -162,8 +162,7 @@ import type { BridgePointerEvent } from "./events/event-bridge";
 const bridge = new EventBridge(pixiCanvas, skiaCanvas, stage);
 
 // Подписка на события
-const ee = sprite as unknown as PIXI.utils.EventEmitter;
-ee.on(BRIDGE_EVENTS.POINTER_DOWN, (e: BridgePointerEvent) => {
+obj.on(BRIDGE_EVENTS.POINTER_DOWN, (e: BridgePointerEvent) => {
   console.log(`Click on ${e.target.constructor.name} via ${e.source}`);
 });
 ```
