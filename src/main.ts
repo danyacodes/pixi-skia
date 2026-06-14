@@ -25,6 +25,13 @@ import treePng from "./assets/tree.png";
 const WIDTH = 660;
 const HEIGHT = 600;
 
+function setResponsiveCanvasSize(canvas: HTMLCanvasElement): void {
+  canvas.style.display = "block";
+  canvas.style.width = "100%";
+  canvas.style.height = "auto";
+  canvas.style.aspectRatio = `${WIDTH} / ${HEIGHT}`;
+}
+
 // ── Bootstrap ────────────────────────────────────────────────────────
 
 async function main(): Promise<void> {
@@ -76,6 +83,7 @@ async function main(): Promise<void> {
   });
   const pixiView = pixiApp.view as HTMLCanvasElement;
   pixiView.id = "pixi-canvas";
+  setResponsiveCanvasSize(pixiView);
 
   // Disable Pixi's native EventSystem — we use EventBridge for unified
   // hit-testing across both canvases.
@@ -90,6 +98,7 @@ async function main(): Promise<void> {
   skiaCanvas.id = "skia-canvas";
   skiaCanvas.width = WIDTH;
   skiaCanvas.height = HEIGHT;
+  setResponsiveCanvasSize(skiaCanvas);
   skiaPanel.appendChild(skiaCanvas);
 
   // ── 5. Shared scene (lives in Pixi's stage) ─────────────────────

@@ -22,7 +22,7 @@
         align-items: center;
         justify-content: center;
         min-height: 100vh;
-        padding: 20px;
+        padding: 16px;
       }
 
       #app {
@@ -30,6 +30,7 @@
         flex-direction: column;
         align-items: center;
         gap: 16px;
+        width: 100%;
       }
 
       #status {
@@ -41,15 +42,22 @@
       /* ── Side-by-side layout ── */
       #canvas-row {
         display: flex;
-        gap: 32px;
+        flex-wrap: wrap;
+        gap: 16px;
         align-items: flex-start;
+        justify-content: center;
+        width: 100%;
+        max-width: 1336px;
       }
 
       .canvas-panel {
         display: flex;
         flex-direction: column;
         align-items: center;
+        flex: 1 1 calc((100% - 16px) / 2);
         gap: 10px;
+        min-width: 0;
+        max-width: 660px;
       }
 
       .canvas-label {
