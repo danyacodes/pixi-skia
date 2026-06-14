@@ -303,6 +303,15 @@ async function main(): Promise<void> {
       }
     }
 
+    // add events if not a polyline
+    if (kind !== 2) {
+      const ee = g as unknown as PIXI.utils.EventEmitter;
+      ee.on(BRIDGE_EVENTS.POINTER_DOWN, onDown);
+      ee.on(BRIDGE_EVENTS.POINTER_UP, onUp);
+      g.eventMode = "static";
+      g.cursor = "pointer";
+    }
+
     stage.addChild(g);
   }
 
