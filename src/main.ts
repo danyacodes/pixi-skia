@@ -206,9 +206,8 @@ async function main(): Promise<void> {
   }
 
   for (const obj of [redSquare, blueRect, circle, treeSprite] as PIXI.DisplayObject[]) {
-    const ee = obj as unknown as PIXI.utils.EventEmitter;
-    ee.on(BRIDGE_EVENTS.POINTER_DOWN, onDown);
-    ee.on(BRIDGE_EVENTS.POINTER_UP, onUp);
+    obj.on(BRIDGE_EVENTS.POINTER_DOWN, onDown);
+    obj.on(BRIDGE_EVENTS.POINTER_UP, onUp);
   }
 
   status.textContent = "Running: same scene rendered by both engines";
@@ -305,9 +304,8 @@ async function main(): Promise<void> {
 
     // add events if not a polyline
     if (kind !== 2) {
-      const ee = g as unknown as PIXI.utils.EventEmitter;
-      ee.on(BRIDGE_EVENTS.POINTER_DOWN, onDown);
-      ee.on(BRIDGE_EVENTS.POINTER_UP, onUp);
+      g.on(BRIDGE_EVENTS.POINTER_DOWN, onDown);
+      g.on(BRIDGE_EVENTS.POINTER_UP, onUp);
       g.eventMode = "static";
       g.cursor = "pointer";
     }

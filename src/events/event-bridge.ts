@@ -27,6 +27,17 @@ export const BRIDGE_EVENTS = {
   POINTER_UP: "bridge:pointerup",
 } as const;
 
+export type BridgeEventName = (typeof BRIDGE_EVENTS)[keyof typeof BRIDGE_EVENTS];
+
+declare global {
+  namespace GlobalMixins {
+    interface DisplayObjectEvents {
+      "bridge:pointerdown": [event: BridgePointerEvent];
+      "bridge:pointerup": [event: BridgePointerEvent];
+    }
+  }
+}
+
 // ── EventBridge ──────────────────────────────────────────────────────
 
 export class EventBridge {
@@ -58,13 +69,13 @@ export class EventBridge {
   private dispatch(
     canvas: HTMLCanvasElement,
     domEvent: PointerEvent,
-    bridgeEvent: string,
+    bridgeEvent: BridgeEventName,
     source: "pixi" | "skia",
   ): void {
     const pos = this.canvasPoint(canvas, domEvent);
     const target = this.hitTest(pos);
     if (target) {
-      (target as PIXI.utils.EventEmitter).emit(bridgeEvent, {
+      target.emit(bridgeEvent, {
         target,
         global: pos,
         originalEvent: domEvent,
